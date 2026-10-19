@@ -164,11 +164,149 @@ export function renderDecision({ status, mode, data, error, appId } = {}) {
   return root;
 }
 
+// ---------- 15단계: 접속 기록·XDR 경보 목록과 상세 ----------
+const KIND_TEXT = { access: '접속 기록', xdr: 'XDR 경보' };
+const ACCESS_STATE_TEXT = { allowed: '허용됨', denied: '거부됨', unknown: '확인 불가' };
+const MISSING_APP = '__missing_app__';
+
+function codeText(map, value) {
+  const code = Object.prototype.hasOwnProperty.call(map, value) ? value : 'unknown';
+  const extra = code !== value ? ` · 받은 값 ${String(value)}` : '';
+  return `${map[code]}(${code})${extra}`;
+}
+
+function eventTime(value) {
+  if (typeof value !== 'string' || !value) return '시각 정보 없음';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : `${d.toLocaleString('ko-KR')} (${value})`;
+}
+
+function timeValue(value) {
+  const t = typeof value === 'string' ? Date.parse(value) : NaN;
+  return Number.isNaN(t) ? -Infinity : t;
+}
+
+function appKey(event) {
+  return typeof event.appId === 'string' && event.appId ? event.appId : MISSING_APP;
+}
+
+function appText(event) {
+  return appKey(event) === MISSING_APP ? '앱 확인 불가(appId 없음)' : event.appId;
+}
+
+function filterSelect(id, labelText, options, value, onChange) {
+  const wrap = node('div');
+  const label = node('label', labelText, { for: id });
+  const select = node('select', null, { id, 'aria-label': labelText });
+  for (const [v, t] of options) {
+    const opt = node('option', t, { value: v });
+    if (v === value) opt.setAttribute('selected', '');
+    select.append(opt);
+  }
+  select.value = value;
+  select.addEventListener('change', () => onChange(select.value));
+  wrap.append(label, select);
+  return wrap;
+}
+
+function renderEventDetail(event) {
+  const box = node('section', null, { 'data-student-event-detail': event.id });
+  box.append(node('h4', `${event.id} 상세`));
+  box.append(node('p', `사건 ID: ${event.id}`));
+  box.append(node('p', `앱: ${appText(event)}`));
+
+  box.append(node('h5', '근거(evidence)'));
+  const ev = Array.isArray(event.evidence) ? event.evidence : [];
+  if (ev.length === 0) box.append(node('p', '근거 정보 없음'));
+  else { const ul = node('ul'); for (const e of ev) ul.append(node('li', `${e.id}: ${e.text}`)); box.append(ul); }
+
+  box.append(node('h5', '규칙(rules)'));
+  const rules = Array.isArray(event.rules) ? event.rules : [];
+  if (rules.length === 0) box.append(node('p', '규칙 정보 없음'));
+  else { const ul = node('ul'); for (const r of rules) ul.append(node('li', `${r.id}: ${r.text}`)); box.append(ul); }
+
+  box.append(node('h5', '상태(state)'));
+  const st = event.state || {};
+  const ul = node('ul');
+  ul.append(node('li', `접속(access): ${codeText(ACCESS_STATE_TEXT, st.access)}`, { 'data-state': st.access ?? 'unknown' }));
+  ul.append(node('li', `세션(session): ${codeText(SESSION_STATUS_TEXT, st.session)}`, { 'data-state': st.session ?? 'unknown' }));
+  ul.append(node('li', `기기(device): ${codeText(DEVICE_STATUS_TEXT, st.device)}`, { 'data-state': st.device ?? 'unknown' }));
+  box.append(ul);
+  // supportedActions 가 비어 있으면 조치 버튼을 만들지 않는다(실제 조치 버튼은 이 단계에서 만들지 않음).
+  return box;
+}
+
+// 필터·상세 선택 상태는 이 렌더러 안에만 둔다. app.js가 새 자료로 호출하면 모두 초기화한다.
+function createEventsRenderer() {
+  return function renderEvents({ status, mode, data, error } = {}) {
+    const root = node('div', null, { 'data-testid': 'student-events-view', 'data-status': status || 'unknown' });
+    const ui = { kind: 'all', app: 'all', access: 'all', selectedId: null };
+    const events = Array.isArray(data) ? data.slice().sort((a, b) => timeValue(b.at) - timeValue(a.at)) : [];
+
+    function draw() {
+      const children = [];
+      const notice = modeNotice({ mode });
+      if (notice) children.push(notice);
+
+      if (status === 'loading') {
+        children.push(node('p', '기록을 불러오는 중', { role: 'status', class: 'state state-loading' }));
+      } else if (status === 'error') {
+        const unverified = error && error.code === 'CONTRACT_MISMATCH';
+        const message = error && error.message ? error.message : '서버 응답 없음';
+        children.push(node('p', `${unverified ? '확인 불가 · ' : ''}기록을 불러오지 못했습니다: ${message}`, { role: 'alert', class: 'state state-error', 'data-events-state': unverified ? 'unverified' : 'error' }));
+        children.push(node('p', '이전 목록은 표시하지 않습니다. 기록이 없다는 뜻이 아닙니다.', { class: 'muted' }));
+      } else if (status === 'ok' && Array.isArray(data) && events.length === 0) {
+        children.push(node('p', '표시할 기록이 없습니다.', { role: 'status', 'data-events-state': 'empty' }));
+        children.push(node('p', '조회는 성공했고 본인의 최근 기록이 0건입니다.', { class: 'muted' }));
+      } else if (status === 'ok' && Array.isArray(data)) {
+        const kinds = [...new Set(events.map((e) => e.kind))];
+        const apps = [...new Set(events.map(appKey))];
+        const accesses = [...new Set(events.map((e) => (e.state || {}).access))];
+        const filters = node('div', null, { 'data-student-event-filters': '' });
+        filters.append(
+          filterSelect('student-filter-kind', '기록 종류', [['all', '전체(all)'], ...kinds.map((k) => [k, `${KIND_TEXT[k] || '알 수 없는 종류'}(${k})`])], ui.kind, (v) => { ui.kind = v; ui.selectedId = null; draw(); }),
+          filterSelect('student-filter-app', '업무 앱', [['all', '전체(all)'], ...apps.map((a) => [a, a === MISSING_APP ? '앱 확인 불가(appId 없음)' : a])], ui.app, (v) => { ui.app = v; ui.selectedId = null; draw(); }),
+          filterSelect('student-filter-access', '접속 상태', [['all', '전체(all)'], ...accesses.map((a) => [a, codeText(ACCESS_STATE_TEXT, a)])], ui.access, (v) => { ui.access = v; ui.selectedId = null; draw(); }),
+        );
+        children.push(filters);
+
+        const shown = events.filter((e) => (ui.kind === 'all' || e.kind === ui.kind)
+          && (ui.app === 'all' || appKey(e) === ui.app)
+          && (ui.access === 'all' || (e.state || {}).access === ui.access));
+        children.push(node('p', `표시 ${shown.length}건 / 받은 기록 ${events.length}건 (본인의 최근 기록, 최대 40건)`, { 'data-student-event-count': String(shown.length) }));
+
+        if (shown.length === 0) {
+          children.push(node('p', '필터 조건에 맞는 기록이 없습니다.', { role: 'status' }));
+        } else {
+          const ul = node('ul');
+          for (const e of shown) {
+            const li = node('li', null, { 'data-student-event-id': e.id });
+            li.append(node('p', `${e.id} · ${eventTime(e.at)} · ${KIND_TEXT[e.kind] ? `${KIND_TEXT[e.kind]}(${e.kind})` : `알 수 없는 종류(${e.kind})`} · 앱: ${appText(e)}`));
+            li.append(node('p', `요약: ${e.summary ?? '요약 없음'}`));
+            const btn = node('button', `${e.id} 상세`, { type: 'button', 'aria-label': `${e.id} 상세`, 'aria-expanded': String(ui.selectedId === e.id) });
+            btn.addEventListener('click', () => { ui.selectedId = ui.selectedId === e.id ? null : e.id; draw(); });
+            li.append(btn);
+            if (ui.selectedId === e.id) li.append(renderEventDetail(e));
+            ul.append(li);
+          }
+          children.push(ul);
+        }
+      } else {
+        children.push(node('p', '확인 불가: 기록 응답 상태를 알 수 없습니다.', { class: 'state state-error' }));
+      }
+      root.replaceChildren(...children);
+    }
+
+    draw();
+    return root;
+  };
+}
+
 export function createStudentView() {
   return {
     renderIdentity,
     renderDecision,
-    renderEvents() { return '학생 구현 대기: 본인 접속·XDR 기록을 연결하세요.'; },
+    renderEvents: createEventsRenderer(),
     renderStatus() { return '학생 구현 대기: 기기·세션·알림과 연결 점검 상태를 구분하세요.'; },
     renderVulnerabilities() { return '학생 구현 대기: 정확한 설치 버전·OSV 출처·조회 시각·부분 결과·조회 실패를 구분하세요.'; },
     renderAiConnection() { return '학생 구현 대기: 모델 응답 점검과 실제 사건 설명을 구분하고 AI 오류·취소·수동 복구를 안내하세요.'; },
