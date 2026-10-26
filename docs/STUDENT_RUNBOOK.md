@@ -5,6 +5,9 @@
 - 앱 이름: 「NIN」(포털에서 정한 이름). 제공 코드와 실행 창은 시작 틀 이름 「케셰브」로 표시합니다.
 - 시작 틀: `alekov-client-starter` 0.2.11 (`package.json`)
 - 저장소: https://github.com/superblueskt-netizen/nin-security-agent
+- 학생 문서: 이 문서(실행·구성도·오류 안내)와 [STUDENT_RELEASE.md](STUDENT_RELEASE.md)(재현 기록·버전·데이터 보존 계획)
+- 학생이 구현한 함수: `student/extension.mjs`의 `renderIdentity` ~ `renderVulnerabilities`(13~20단계)
+- README.md는 제공 원본 그대로 둡니다. 21·22단계 동안 README 끝에 붙였던 학생 안내는 시작 틀 업데이트 도구가 제공 파일 변경으로 멈추지 않도록 2026-10-26에 이 문서로 옮겼습니다.
 
 확인 표시는 세 가지로 나눕니다.
 
@@ -51,7 +54,7 @@ on-client/
 └─ docs/                   제공 문서 + 이 문서(STUDENT_RUNBOOK.md, 학생 작성)
 ```
 
-제공/학생 구분의 기준은 `.on-starter-manifest.json`의 `sourceHashes` 목록입니다. 목록에 있는 파일은 제공 파일이며, 그중 학생이 고친 것은 `student/extension.mjs`와 README.md 끝의 학생 부분뿐입니다.
+제공/학생 구분의 기준은 `.on-starter-manifest.json`의 `sourceHashes` 목록입니다. 목록에 있는 파일은 제공 파일이며, 그중 학생이 고친 것은 `student/extension.mjs`뿐이며, 학생 문서는 목록에 없는 `docs/STUDENT_*.md`에 둡니다.
 
 ## 4. 실행·종료·재실행
 

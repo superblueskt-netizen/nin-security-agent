@@ -105,9 +105,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1 -Po
 
 | 데이터 | 어디에 | 보존·백업 | 복원 | 제한 |
 |---|---|---|---|---|
-| 학생 코드·문서(`student/extension.mjs`, `docs/STUDENT_*.md`, README 학생 부분) | Git 저장소 | 단계마다 커밋하고 GitHub `origin`에 push. 원래 작업 폴더는 지우지 않음 | 새 폴더에 `git clone` 뒤 `git checkout <커밋>`(3장) | 커밋·push하지 않은 변경은 복원할 수 없음 |
+| 학생 코드·문서(`student/extension.mjs`, `docs/STUDENT_*.md`) | Git 저장소 | 단계마다 커밋하고 GitHub `origin`에 push. 원래 작업 폴더는 지우지 않음 | 새 폴더에 `git clone` 뒤 `git checkout <커밋>`(3장) | 커밋·push하지 않은 변경은 복원할 수 없음 |
 | 앱 실행 상태(화면 결과) | 서버·브라우저 메모리 | 저장하지 않음. 기본 실행은 서버가 파일을 쓰지 않고, 화면 코드는 브라우저 저장소(localStorage 등)를 쓰지 않음(원문 확인) | 다시 실행하고 다시 조회 | 이전 조회 결과는 남지 않음 |
 | `.env` 등 로컬 설정 | 내 PC(Git 제외) | 비밀은 커밋하지 않음. 비밀 없는 견본은 `.env.example` | 견본을 보고 다시 설정 | 서버는 `.env`를 자동으로 읽지 않음(환경변수만) |
 | 조치 기록 DB(SQLite) | 운영자가 지정한 기존 파일(`databasePath`) | 운영자 관리. 기본 실행에서는 쓰지 않음 | 운영자 절차 | 앱이 자동 생성·이전하지 않음(`src/actions/action-startup-config.mjs`) |
 | AI 앱 자격 | native host가 Windows 쪽 보관(`tools/app-credentials.ps1`), 프로젝트·Git 밖 | 학생이 복사·백업하지 않음 | 새 환경에서 계정 연결·앱 승인을 다시 함 | 운영자 권한 필요(UNV) |
 | SDP 설정·인증서 | 운영자가 준 파일, 프로젝트·Git 밖 | 학생이 복사하지 않음 | 운영자에게 다시 안내받음 | 기본 실행에서는 쓰지 않음 |
+
+## 6. 이후 변경 기록
+
+- 2026-10-26: 시작 틀 0.2.19 업데이트 미리보기가 `UPDATE_FILE_MODIFIED`(README.md)로 멈췄습니다(변경 없음, `touched:false`). README.md를 제공 원본(커밋 `973d09f`의 README, 원본 지문과 일치)으로 되돌리고 학생 안내는 STUDENT_RUNBOOK.md로 옮겼습니다. 22단계에 제출한 커밋 `1f5cae6`과 그 재현 기록은 그대로 남아 있습니다.
