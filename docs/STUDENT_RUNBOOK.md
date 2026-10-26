@@ -11,9 +11,9 @@
 | 표시 | 뜻 |
 |---|---|
 | 코드 확인 | 이 저장소의 파일을 읽고 대조했습니다. 실행하지 않았습니다. |
-| 작업 환경 실행 | 수업용 AI 작업 환경(Linux, Node.js v22.23.2)에서 2026-10-26에 실제로 실행했습니다. 학생 PC(Windows) 결과가 아닙니다. |
+| 참고 실행(지원 환경 아님) | 수업용 AI 작업 환경(Linux, Node.js v22.23.2)에서 2026-10-26에 실행해 본 결과입니다. 지원 환경(9장)이 아니므로 이 결과로 동작을 확인했다고 보지 않습니다. |
 | 학생 PC 확인 | 학생 PC(Windows, Node.js v24.19.0)에서 2026-10-26에 직접 실행하고 화면을 봤습니다. |
-| 미확인 | 학생 PC에서 아직 확인하지 않았습니다. 확인하면 이 표를 고칩니다. |
+| 미확인 | 지원 환경(학생 PC)에서 아직 확인하지 않았습니다. 확인하면 이 표를 고칩니다. |
 
 ## 1. 목적과 기능
 
@@ -23,12 +23,12 @@
 
 | 항목 | 기준 | 근거 | 확인 |
 |---|---|---|---|
-| Node.js | 22~24 지원, 수업 기준 24.19.0 | `package.json`의 `engines.node`, `tools/start-alekov.ps1`의 버전 검사 | 학생 PC 확인: `node -v` → `v24.19.0` |
+| Node.js | 수업·검수 기준 24.19.0. 실행 도구는 22~24만 실행하고 그 밖의 버전은 거절합니다 | `package.json`의 `engines.node`는 `24.19.0`(정확한 버전), 22~24 범위는 `tools/start-alekov.ps1`의 버전 검사 | 학생 PC 확인: `node -v` → `v24.19.0` |
 | npm 의존성 | 없음. `package-lock.json`도 없으며 `npm install`이 필요 없습니다 | `package.json`에 dependencies 없음 | 코드 확인 |
 | PowerShell | Windows 기본 PowerShell | `tools/start-alekov.ps1` | 학생 PC 확인 |
 | 브라우저 | PC 브라우저 | 서버가 `127.0.0.1`에만 열림(`src/server.mjs`) | 학생 PC 확인(`http://127.0.0.1:5189/`) |
 
-Node.js 22에서는 실행 창에 `ExperimentalWarning: SQLite is an experimental feature` 경고가 보였습니다(작업 환경 실행). 동작을 멈추는 오류는 아닙니다.
+참고 실행(Linux, Node 22)에서는 `ExperimentalWarning: SQLite is an experimental feature` 경고가 보였습니다. 지원 환경에서 같은 경고가 나오는지는 미확인입니다.
 
 ## 3. 폴더 구조
 
@@ -62,22 +62,27 @@ on-client/
 
 | 방법 | 명령 | 하는 일 | 확인 |
 |---|---|---|---|
-| 기본(권장) | `powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1` | Node 버전·폴더·포트 확인 뒤 `src/server.mjs` 실행 | 학생 PC 확인(사전 확인 단계의 포트 충돌 안내까지) |
-| npm | `npm start` | `node src/server.mjs` (사전 확인 없음) | 작업 환경 실행 |
-| 예제 자료 | `npm run demo` 또는 실행 도구 뒤에 ` -Demo` | 예제 엔진으로 실행. 실제 연결이 아님 | 작업 환경 실행(`node src/server.mjs --demo`) |
-| 문법 확인 | `npm run check` | `node --check student/extension.mjs` | 작업 환경 실행 |
-| 다른 포트 | 실행 도구 뒤에 ` -Port 5190` | 5189를 다른 프로그램이 쓸 때 | 학생 PC 확인 |
+| 기본(권장) | `powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1` | Node 버전·폴더·포트 확인 뒤 `node src/server.mjs` 실행 | 학생 PC 확인(5189가 사용 중이라 포트 충돌 안내까지) |
+| npm | `npm start` | `node src/server.mjs` (버전·포트 사전 확인 없음) | 미확인(참고 실행만) |
+| 예제 자료 | `npm run demo`(`node src/server.mjs --demo`) 또는 실행 도구 뒤에 ` -Demo` | 예제 엔진으로 실행. 실제 연결이 아님. `-SdpHostConfig`와 함께 쓸 수 없음 | 미확인(참고 실행만) |
+| 문법 확인 | `npm run check` | `node --check student/extension.mjs`(문법만) | 미확인(참고 실행만) |
+| 다른 포트 | 실행 도구 뒤에 ` -Port 5190` | 5189를 다른 프로그램이 쓸 때. 1024~65535만 받음 | 학생 PC 확인 |
+| 창 없이 | 실행 도구 뒤에 ` -Background` | 창 없이 실행하고 프로세스 번호를 알려 줌 | 미확인 |
 
 `-ExecutionPolicy Bypass`는 그 한 번의 실행에만 적용됩니다.
 
-설정은 환경변수로만 읽습니다(`src/server.mjs`의 `process.env`). 서버는 `.env` 파일을 자동으로 읽지 않습니다. 쓰는 변수는 `ON_PORT`(기본 5189), `ON_ENGINE_ADAPTER`, `ON_PROJECT_DIRECTORY`, `ON_APPROVED_PUBLIC_PACKAGES`(기본 `[]`)이며, 조회 대상 경로와 허용 패키지는 운영자가 정합니다.
+설정은 환경변수로만 읽습니다(`src/server.mjs`의 `process.env`). 서버는 `.env` 파일을 자동으로 읽지 않으며, `.env.example`은 값의 견본일 뿐입니다. 서버가 쓰는 변수는 `ON_PORT`(없으면 5189), `ON_ENGINE_ADAPTER`, `ON_PROJECT_DIRECTORY`, `ON_APPROVED_PUBLIC_PACKAGES`(없으면 `[]`)입니다. 조회 대상 경로와 허용 패키지는 운영자가 정합니다.
+
+실행 도구로 켜면 `ON_PORT`는 `-Port` 값(기본 5189)으로 덮어쓰고, 이름에 TOKEN·SECRET·PASSWORD·API_KEY 등이 들어가거나 `ON_AI_`로 시작하는 환경변수는 서버에 넘기지 않습니다(`tools/start-alekov.ps1` 4번 단계).
 
 ### 브라우저 주소와 정상 시작 신호
 - 주소: `http://127.0.0.1:5189/` (포트를 바꿨으면 그 번호)
-- 실행 도구 사용 시 창에 다음 두 줄이 나옵니다(`tools/start-alekov.ps1` 코드 확인).
-  - `케셰브가 켜졌습니다. 브라우저에서 http://127.0.0.1:5189/ 을 여세요.`
+- 실행 도구는 `http://127.0.0.1:<포트>/`가 HTTP 200으로 응답할 때까지 최대 20초(`-WaitSeconds`) 기다린 뒤 아래 줄을 출력합니다. 첫 줄은 서버(`src/server.mjs`)가, 나머지는 실행 도구가 출력합니다(학생 PC 실제 출력은 아래 5190 기록).
+  - `케셰브 연결 확인: http://127.0.0.1:<포트>`
+  - `케셰브가 켜졌습니다. 브라우저에서 http://127.0.0.1:<포트>/ 을 여세요.`
   - `서버가 응답한 것만 확인했습니다. AI 연결 상태는 화면에서 따로 확인해 주세요.`
-- `npm start`로 실행하면 서버가 `케셰브 연결 확인: http://127.0.0.1:5189`를, `npm run demo`는 `케셰브 예제: http://127.0.0.1:5189`를 출력합니다(작업 환경 실행, 포트만 바꿔서 확인).
+  - `끄려면 이 창에서 Ctrl+C 를 누르세요.`
+- `npm start`는 서버 줄 `케셰브 연결 확인: http://127.0.0.1:5189`만, `npm run demo`는 `케셰브 예제: http://127.0.0.1:5189`만 출력합니다(`src/server.mjs` 코드 확인, 학생 PC 미확인).
 - 화면 위쪽에 「보호 현황」「업무 앱」「보안 기록」 탭이 보이면 화면이 뜬 것입니다.
 - 학생 PC 확인(2026-10-26): 새 PowerShell 창에서 실행 도구를 실행하자, 이미 다른 창에서 켜 둔 앱이 5189를 쓰고 있어 `포트 5189 를 다른 프로그램이 쓰고 있습니다. 그 프로그램은 그대로 두고, 다른 번호로 실행해 주세요. 예: -Port 5190`을 출력하고 멈췄습니다(다른 프로그램을 종료하지 않음). 이미 켜져 있던 `http://127.0.0.1:5189/` 화면은 기본 실행(연결 없음) 상태로 다음처럼 보였습니다.
   - 위쪽 상태: `연결 없음`과 확인 시각, 탭 「보호 현황」「업무 앱」「보안 기록」
@@ -94,11 +99,12 @@ on-client/
   끄려면 이 창에서 Ctrl+C 를 누르세요.
   ```
   첫 줄은 `src/server.mjs`, 나머지 세 줄은 `tools/start-alekov.ps1`이 출력합니다.
-- 기본 실행은 연결 없음(disconnected)입니다. 작업 환경에서 `GET /api/me`는 `ENGINE_NOT_CONNECTED`, `GET /api/vulnerabilities`는 `not_configured`를 돌려줬습니다. 둘 다 실패가 아니라 정해진 미연결 상태입니다.
+- 기본 실행은 연결 없음(disconnected)입니다. 학생 PC 화면에서는 위처럼 `연결 없음`이 보였습니다. 참고 실행에서 `GET /api/me`는 `ENGINE_NOT_CONNECTED`, `GET /api/vulnerabilities`는 `not_configured`(`ON_PROJECT_DIRECTORY` 미설정)를 돌려줬습니다. 학생 PC의 「설치 패키지 조회」 결과는 미확인입니다.
 
 ### 종료와 재실행
-- 종료: 실행한 PowerShell 창에서 `Ctrl+C`. 브라우저 주소가 더 이상 열리지 않으면 종료된 것입니다. ` -Background`로 켰으면 안내된 프로세스 번호의 node를 작업 관리자에서 종료합니다.
-- 재실행: 같은 폴더에서 같은 명령을 다시 실행합니다. 실행·종료는 파일을 바꾸지 않습니다.
+- 종료: 실행한 PowerShell 창에서 `Ctrl+C`(실행 도구가 출력하는 안내). 브라우저 주소가 더 이상 열리지 않으면 종료된 것입니다. ` -Background`로 켰으면 안내된 프로세스 번호의 node를 작업 관리자에서 종료합니다.
+- 재실행: 같은 폴더에서 같은 명령을 다시 실행합니다. 이전 서버가 아직 켜져 있으면 포트 충돌 안내가 나오므로(학생 PC에서 실제로 나옴) 먼저 끄거나 ` -Port`로 다른 번호를 씁니다.
+- 학생 PC에서 `Ctrl+C`로 끈 뒤 같은 포트로 다시 켜는 것은 미확인입니다.
 
 ## 5. 구성도
 
@@ -121,7 +127,7 @@ flowchart LR
 
 | 출발 | 도착 | 무엇을 | 실제 위치 | 기본 실행에서 |
 |---|---|---|---|---|
-| 브라우저 | 로컬 앱 서버 | 화면 자료 요청(HTTP JSON) | `public/app.js` → `src/server.mjs` | 동작(작업 환경 실행) |
+| 브라우저 | 로컬 앱 서버 | 화면 자료 요청(HTTP JSON) | `public/app.js` → `src/server.mjs` | 동작(학생 PC 화면에서 연결 없음 응답 확인) |
 | 브라우저(제공 화면) | 학생 표시 함수 | 받은 응답 사본으로 `render*` 호출, 반환 DOM을 학생 칸에 넣음 | `public/app.js`의 `renderStudent` → `student/extension.mjs` | 동작(코드 확인) |
 | 로컬 앱 서버 | 접근 제어·XDR 시스템(SDP) | 로그인·기기·세션·앱 판정·기록 | `src/engine/sdp-host.mjs`, `student/engine-adapter.mjs` | 연결 없음(`ENGINE_NOT_CONNECTED`) |
 | 로컬 앱 서버 | CLCO 수업용 AI 게이트 | 연결 점검·사건 설명 | `src/ai/connection.mjs`, `vendor/clco-http.mjs` | 계정 연결·앱 승인 전에는 연결 안 됨 |
@@ -169,11 +175,9 @@ AI 키·SDP 인증서는 서버 쪽 보관함과 운영자가 준 설정 파일�
 
 | 기능 | 상태 | 비고 |
 |---|---|---|
-| `npm start`로 서버가 뜨고 `/` 가 HTTP 200 | 작업 환경 실행 | Linux·Node 22, 학생 PC 아님 |
-| `--demo`에서 `/api/me`가 예제 사용자 반환 | 작업 환경 실행 | 예제 자료이며 실제 연결 아님 |
-| 기본 실행에서 `/api/me` = `ENGINE_NOT_CONNECTED`, `/api/vulnerabilities` = `not_configured` | 작업 환경 실행 | |
-| `npm run check` 통과 | 작업 환경 실행 | 문법만 확인 |
-| 20단계 표시 함수의 상태별 문구·속성 | 모의 데이터 점검 | 작업 환경에서 가짜 DOM으로 확인 |
+| `npm start`·`npm run demo`·`npm run check` | 미확인 | 참고 실행(Linux·Node 22)에서만 실행. 지원 환경 확인 아님 |
+| 기본 실행의 `/api/me` = `ENGINE_NOT_CONNECTED`, `/api/vulnerabilities` = `not_configured` | 미확인 | 참고 실행에서만 응답 확인 |
+| 20단계 표시 함수의 상태별 문구·속성 | 모의 데이터 점검 | 참고 환경에서 가짜 DOM으로 확인, 실제 화면 아님 |
 | 학생 PC에서 실행 도구의 Node 버전 확인·포트 충돌 안내 | 학생 PC 확인 | 2026-10-26 |
 | 학생 PC에서 `-Port 5190`으로 새로 켜기·시작 문구·브라우저 화면 | 학생 PC 확인 | 2026-10-26 |
 | 학생 PC에서 `Ctrl+C` 종료 뒤 다시 켜기 | 미확인 | 22단계 새 환경 기록에서 확인 예정 |
@@ -182,4 +186,15 @@ AI 키·SDP 인증서는 서버 쪽 보관함과 운영자가 준 설정 파일�
 | SDP 실제 연결(실제 사용자·기기·판정·기록) | 기다림(UNV) | 담당자 설정 파일 필요 |
 | CLCO 계정 연결·AI 앱 승인·사건 설명 | 기다림(UNV) | 운영자 권한 발급 필요 |
 | 보안 조치 실제 집행과 효과 관측 | 기다림(UNV) | 실행하지 않음 |
-| OSV 실제 외부 조회 결과 | 기다림(UNV) | 허용 목록이 비어 있어 미조회. 결과가 없어도 안전 보장이 아님 |
+| OSV 실제 외부 조회 결과 | 기다림(UNV) | 조회 대상 프로젝트(`ON_PROJECT_DIRECTORY`)와 허용 목록(`ON_APPROVED_PUBLIC_PACKAGES`)을 운영자가 정하기 전에는 `not_configured`·`not_checked`. 결과가 없어도 안전 보장이 아님 |
+
+## 9. 지원 환경과 지원하지 않는 환경
+
+| 구분 | 내용 | 근거 |
+|---|---|---|
+| 지원 | Windows PC + PowerShell + Node.js 24.19.0(실행 도구는 22~24 허용), 같은 PC의 브라우저로 `http://127.0.0.1:<포트>/` 접속 | `package.json` `engines`, `tools/start-alekov.ps1`, `src/server.mjs`(127.0.0.1에서만 대기) |
+| 지원 안 함 | Node.js 21 이하·25 이상: 실행 도구가 `지금 Node.js 는 vXX 입니다…`로 거절 | `tools/start-alekov.ps1` |
+| 지원 안 함 | 다른 기기·휴대폰에서 이 PC의 앱 접속: 서버가 127.0.0.1에만 열리고 Host가 `127.0.0.1:<포트>`·`localhost:<포트>`가 아니면 거절 | `src/server.mjs` |
+| 지원 안 함 | 바로가기(링크) 폴더에서 실행 | `tools/start-alekov.ps1` |
+| 확인 대상 아님 | macOS·Linux: 실행 도구가 Windows PowerShell 스크립트이며, 이 문서의 참고 실행(Linux)은 지원을 뜻하지 않음 | `tools/start-alekov.ps1` |
+| 함께 못 씀 | `-Demo`와 `-SdpHostConfig` | `tools/start-alekov.ps1`(`SDP 연결과 예제 모드는 함께 실행할 수 없습니다.`) |
