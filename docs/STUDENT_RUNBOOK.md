@@ -12,6 +12,7 @@
 |---|---|
 | 코드 확인 | 이 저장소의 파일을 읽고 대조했습니다. 실행하지 않았습니다. |
 | 작업 환경 실행 | 수업용 AI 작업 환경(Linux, Node.js v22.23.2)에서 2026-10-26에 실제로 실행했습니다. 학생 PC(Windows) 결과가 아닙니다. |
+| 학생 PC 확인 | 학생 PC(Windows, Node.js v24.19.0)에서 2026-10-26에 직접 실행하고 화면을 봤습니다. |
 | 미확인 | 학생 PC에서 아직 확인하지 않았습니다. 확인하면 이 표를 고칩니다. |
 
 ## 1. 목적과 기능
@@ -22,10 +23,10 @@
 
 | 항목 | 기준 | 근거 | 확인 |
 |---|---|---|---|
-| Node.js | 22~24 지원, 수업 기준 24.19.0 | `package.json`의 `engines.node`, `tools/start-alekov.ps1`의 버전 검사 | 학생 PC 버전: 미확인(`node -v`로 확인) |
+| Node.js | 22~24 지원, 수업 기준 24.19.0 | `package.json`의 `engines.node`, `tools/start-alekov.ps1`의 버전 검사 | 학생 PC 확인: `node -v` → `v24.19.0` |
 | npm 의존성 | 없음. `package-lock.json`도 없으며 `npm install`이 필요 없습니다 | `package.json`에 dependencies 없음 | 코드 확인 |
-| PowerShell | Windows 기본 PowerShell | `tools/start-alekov.ps1` | 미확인 |
-| 브라우저 | PC 브라우저 | 서버가 `127.0.0.1`에만 열림(`src/server.mjs`) | 미확인 |
+| PowerShell | Windows 기본 PowerShell | `tools/start-alekov.ps1` | 학생 PC 확인 |
+| 브라우저 | PC 브라우저 | 서버가 `127.0.0.1`에만 열림(`src/server.mjs`) | 학생 PC 확인(`http://127.0.0.1:5190/`) |
 
 Node.js 22에서는 실행 창에 `ExperimentalWarning: SQLite is an experimental feature` 경고가 보였습니다(작업 환경 실행). 동작을 멈추는 오류는 아닙니다.
 
@@ -61,11 +62,11 @@ on-client/
 
 | 방법 | 명령 | 하는 일 | 확인 |
 |---|---|---|---|
-| 기본(권장) | `powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1` | Node 버전·폴더·포트 확인 뒤 `src/server.mjs` 실행 | 코드 확인 · 학생 PC 미확인 |
+| 기본(권장) | `powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1` | Node 버전·폴더·포트 확인 뒤 `src/server.mjs` 실행 | 학생 PC 확인(아래 다른 포트로) |
 | npm | `npm start` | `node src/server.mjs` (사전 확인 없음) | 작업 환경 실행 |
 | 예제 자료 | `npm run demo` 또는 실행 도구 뒤에 ` -Demo` | 예제 엔진으로 실행. 실제 연결이 아님 | 작업 환경 실행(`node src/server.mjs --demo`) |
 | 문법 확인 | `npm run check` | `node --check student/extension.mjs` | 작업 환경 실행 |
-| 다른 포트 | 실행 도구 뒤에 ` -Port 5190` | 5189를 다른 프로그램이 쓸 때 | 코드 확인 |
+| 다른 포트 | 실행 도구 뒤에 ` -Port 5190` | 5189를 다른 프로그램이 쓸 때 | 학생 PC 확인 |
 
 `-ExecutionPolicy Bypass`는 그 한 번의 실행에만 적용됩니다.
 
@@ -77,7 +78,13 @@ on-client/
   - `케셰브가 켜졌습니다. 브라우저에서 http://127.0.0.1:5189/ 을 여세요.`
   - `서버가 응답한 것만 확인했습니다. AI 연결 상태는 화면에서 따로 확인해 주세요.`
 - `npm start`로 실행하면 서버가 `케셰브 연결 확인: http://127.0.0.1:5189`를, `npm run demo`는 `케셰브 예제: http://127.0.0.1:5189`를 출력합니다(작업 환경 실행, 포트만 바꿔서 확인).
-- 화면 위쪽에 「보호 현황」「업무 앱」「보안 기록」 탭이 보이면 화면이 뜬 것입니다(미확인).
+- 화면 위쪽에 「보호 현황」「업무 앱」「보안 기록」 탭이 보이면 화면이 뜬 것입니다.
+- 학생 PC 확인(2026-10-26, `-Port 5190`): 이미 다른 창의 앱이 5189를 쓰고 있어 실행 도구가 `포트 5189 를 다른 프로그램이 쓰고 있습니다. 그 프로그램은 그대로 두고, 다른 번호로 실행해 주세요. 예: -Port 5190`을 출력하고 멈췄습니다. ` -Port 5190`을 붙여 다시 실행하자 `http://127.0.0.1:5190/`에서 「보호 현황」이 열렸습니다. 기본 실행이라 다음처럼 보였습니다.
+  - 제공 「현재 로그인」: 사용자·기기·세션 모두 `확인 불가 (요청 실패)`
+  - 제공 「내 기기」「내 세션」: `기존 서버·에이전트의 연결을 확인할 수 없습니다. 연결 어댑터를 먼저 확인하세요.`
+  - 학생 renderIdentity: `모드: 연결 없음`과 `연결 실패: 기존 서버·에이전트의 연결을 확인할 수 없습니다. 연결 어댑터를 먼저 확인하세요.`
+  - 학생 renderStatus: `등록 기기을(를) 불러오지 못했습니다: …`와 `다시 시도는 위쪽 다시 불러오기 버튼을 직접 누르세요. 자동으로 다시 요청하지 않습니다.`
+- 실행 창의 시작 문구 두 줄은 학생 PC에서 따로 기록하지 않았습니다(미확인).
 - 기본 실행은 연결 없음(disconnected)입니다. 작업 환경에서 `GET /api/me`는 `ENGINE_NOT_CONNECTED`, `GET /api/vulnerabilities`는 `not_configured`를 돌려줬습니다. 둘 다 실패가 아니라 정해진 미연결 상태입니다.
 
 ### 종료와 재실행
@@ -158,8 +165,10 @@ AI 키·SDP 인증서는 서버 쪽 보관함과 운영자가 준 설정 파일�
 | 기본 실행에서 `/api/me` = `ENGINE_NOT_CONNECTED`, `/api/vulnerabilities` = `not_configured` | 작업 환경 실행 | |
 | `npm run check` 통과 | 작업 환경 실행 | 문법만 확인 |
 | 20단계 표시 함수의 상태별 문구·속성 | 모의 데이터 점검 | 작업 환경에서 가짜 DOM으로 확인 |
-| 학생 PC에서 실행 도구로 켜기·끄기·다시 켜기 | 미확인 | 22단계 새 환경 기록에서 확인 예정 |
-| 학생 PC 브라우저에서 13~20단계 학생 칸 표시 | 미확인 | |
+| 학생 PC에서 실행 도구로 켜기, 포트 충돌 안내, `-Port 5190` 실행 | 학생 PC 확인 | 2026-10-26 |
+| 학생 PC에서 `Ctrl+C` 종료 뒤 다시 켜기 | 미확인 | 22단계 새 환경 기록에서 확인 예정 |
+| 학생 PC 브라우저에서 13·16단계 학생 칸의 연결 없음 표시 | 학생 PC 확인 | 기본 실행(연결 없음) 상태만 |
+| 학생 PC 브라우저에서 14·15·17~20단계 학생 칸 표시 | 미확인 | |
 | SDP 실제 연결(실제 사용자·기기·판정·기록) | 기다림(UNV) | 담당자 설정 파일 필요 |
 | CLCO 계정 연결·AI 앱 승인·사건 설명 | 기다림(UNV) | 운영자 권한 발급 필요 |
 | 보안 조치 실제 집행과 효과 관측 | 기다림(UNV) | 실행하지 않음 |
