@@ -31,4 +31,5 @@ npm start도 같은 서버를 켭니다. 기본 실행은 실제 회사 시스�
 이 아래는 학생이 쓴 부분입니다. 위의 제공 안내는 바꾸지 않았습니다.
 
 - 학생 실행 설명서와 구성도: docs/STUDENT_RUNBOOK.md (필요 프로그램·실행/종료/재실행·구성도·제공/학생 구분·오류별 확인·미확인 목록)
+- 재현 기록·버전(NIN 0.9, 검증 중)·데이터 보존 계획: docs/STUDENT_RELEASE.md
 - 학생이 구현한 함수: student/extension.mjs 의 renderIdentity ~ renderVulnerabilities (13~20단계)

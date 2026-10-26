@@ -10,7 +10,7 @@
 | 학생 버전 | **NIN 0.9 (검증 중)** — v1.0 아님 |
 | 저장소 | https://github.com/superblueskt-netizen/nin-security-agent |
 | 브랜치 | `main` |
-| 재현 대상 커밋 | 3장에 기록 |
+| 재현 대상 커밋 | `b53a69b353da711b90991cd0e03f565bf537dc0f` (4장) |
 | 지원 환경 | Windows + PowerShell + Node.js 24.19.0(실행 도구 허용 22~24). 자세한 범위는 STUDENT_RUNBOOK.md 9장 |
 
 v1.0이 아닌 이유(누락·미해결):
@@ -56,7 +56,50 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-alekov.ps1 -Po
 
 ## 4. 재현 기록
 
-(재현 전 — 학생이 3장을 실행한 뒤 채웁니다.)
+재현 기록은 학생 진술입니다. 서버가 새 환경에서 실행해 확인한 것이 아닙니다.
+
+| 항목 | 값 |
+|---|---|
+| 재현한 커밋 | `b53a69b353da711b90991cd0e03f565bf537dc0f` (`main`, GitHub에 push된 커밋) |
+| 재현 일시 | 2026-10-26 15:11~15:15 KST (화면 조회 시각 `2026-10-26T06:11:52.906Z`) |
+| 환경 | Windows PC, PowerShell, Node.js `v24.19.0` |
+| 새 폴더 | 바탕 화면의 `nin-repro`(원래 앱 폴더와 별개, GitHub에서 clone). 원래 폴더의 설정·인증 파일은 복사하지 않음 |
+| 원래 폴더 | 재현 전에 `git status --short` 출력 없음, `git log`로 기록 보존 확인 |
+
+### 4.1 절차와 관찰 결과
+
+| 순서 | 명령·동작 | 관찰 결과 | 증거 |
+|---|---|---|---|
+| 1 | `git clone https://github.com/superblueskt-netizen/nin-security-agent nin-repro` | 폴더 생성. 같은 명령을 한 번 더 실행했을 때는 `destination path 'nin-repro' already exists`로 멈췄고, 먼저 만든 폴더를 그대로 사용 | 학생 PC 실행 |
+| 2 | `git checkout b53a69b…` → `git rev-parse HEAD` | `HEAD is now at b53a69b …`, `b53a69b353da711b90991cd0e03f565bf537dc0f` | 학생 PC 실행 |
+| 3 | `git status --short` | 출력 없음(변경 없음) | 학생 PC 실행 |
+| 4 | `node -v` | `v24.19.0` | 학생 PC 실행 |
+| 5 | `npm run check` | `node --check student/extension.mjs` 실행, 오류 출력 없음 | 학생 PC 실행 |
+| 6 | `…start-alekov.ps1 -Port 5191` | `케셰브 연결 확인: http://127.0.0.1:5191`, `케셰브가 켜졌습니다…`, `서버가 응답한 것만 확인했습니다…`, `끄려면 이 창에서 Ctrl+C 를 누르세요.` | 학생 PC 실행 |
+| 7 | 브라우저 `http://127.0.0.1:5191/` → 「설치 패키지 조회」 | 제공 칸 `프로젝트 연결 준비 중`·`PROJECT_NOT_CONFIGURED`. 학생 칸은 아래 표 | 학생 PC 실행 |
+| 8 | `Ctrl+C` | 실행 도구가 끝나고 PowerShell 프롬프트로 돌아옴 | 학생 PC 실행 |
+| 9 | 같은 명령으로 재실행(같은 포트 5191) | 6과 같은 네 줄이 다시 나옴(포트 충돌 없음 → 이전 서버 종료 확인) | 학생 PC 실행 |
+| 10 | `Ctrl+C` 뒤 `…start-alekov.ps1 -Port 5191 -Demo` | 첫 줄이 `케셰브 예제: http://127.0.0.1:5191`, 나머지 세 줄 동일 | 예제(demo) |
+
+종료 사이에 브라우저를 새로고침해 "열리지 않음"을 따로 보지는 않았습니다(미확인). 같은 포트로 다시 켜진 것으로 종료를 판단했습니다.
+
+### 4.2 13~21단계 결과 (재현 커밋 `b53a69b` 기준)
+
+| 단계 | 기능(학생 코드) | 결과 | 확인 시각 | 근거 | 미확인 원인 |
+|---|---|---|---|---|---|
+| 13 | `renderIdentity` 로그인 사용자·기기·세션 | 재현 폴더에서는 미확인 | — | — | 재현 폴더 화면을 캡처하지 않음. 원래 폴더(커밋 `d1afc04`)의 연결 없음 화면은 STUDENT_RUNBOOK.md 4장에 따로 기록했으며 이 커밋 결과로 합치지 않음 |
+| 14 | `renderDecision` 업무 앱 판정 | 예제 모드에서 판정 전 상태 `앱을 골라 접속을 요청하세요.` 표시 | 15:15 | 예제(demo) | 접속 요청 뒤 판정 표시는 미확인. 실제 판정은 SDP 연결 필요(UNV) |
+| 15 | `renderEvents` 기록 목록·필터 | `모드: 예제 자료`, 필터 3개(기록 종류·업무 앱·접속 상태), `표시 1건 / 받은 기록 1건`, `event-01 … 접속 기록(access) · 앱: repository`, 「event-01 상세」 버튼 | 15:15 | 예제(demo) — 실제 연결 아님 | 상세 펼침은 미확인. 실제 기록은 SDP 연결 필요(UNV) |
+| 16 | `renderStatus` 기기·세션·알림·도움정보 | `모드: 연결 없음`, 등록 기기·현재 세션 `…을(를) 불러오지 못했습니다`, 알림 5건 `ENGINE_NOT_CONNECTED`, `도움정보를 아직 불러오지 않았습니다`, 「도움정보 복사」 비활성 | 15:12 | 학생 PC 실행(기본 실행, 연결 없음) | 연결된 상태의 표시는 SDP 필요(UNV) |
+| 17 | `renderAiConnection` AI 연결 점검 | 미확인 | — | — | 재현에서 점검하지 않음. 계정 연결·앱 승인은 운영자 권한 필요(UNV) |
+| 18 | `renderExplanation` AI 사건 설명 | 미확인 | — | 모의 데이터·원문 확인만(이전 단계) | AI 연결 필요(UNV) |
+| 19 | `renderAction` 조치 상태 | 미확인 | — | 원문 확인만 | 실집행 연결이 준비되지 않음(제공 안내). 조치를 실행하지 않음 |
+| 20 | `renderVulnerabilities` 패키지 조회 | `모드: 연결 없음`, `주의: 전체 조회 상태: 조회 준비 미완료(not_configured)`, `코드: PROJECT_NOT_CONFIGURED`, `전체 조회 시각(checkedAt): 2026-10-26T06:11:52.906Z`(제공 칸과 같은 값), `표시할 패키지 행이 없습니다(조회하지 않음).` | 15:12 | 학생 PC 실행 | OSV 실제 조회 결과(패키지 행·취약점 ID)는 조회 대상 설정 필요(UNV). 상태별 표시는 모의 데이터로만 점검 |
+| 21 | 실행 설명서·구성도 | 설명서 4장 절차대로 새 폴더에서 실행·종료·재실행 재현 | 15:11~15:14 | 학생 PC 실행 | 브라우저 새로고침으로 종료 확인은 미확인 |
+
+### 4.3 기록 커밋과 재현 커밋의 관계
+
+이 기록은 재현 뒤 새 커밋으로 추가했습니다. 재현 커밋 `b53a69b`와 제출할 최종 커밋의 차이는 문서(`docs/STUDENT_RELEASE.md`, `docs/STUDENT_RUNBOOK.md`, `README.md` 학생 부분)뿐이며 코드·설정·실행 진입점은 같습니다. 확인 명령: `git diff --stat b53a69b HEAD`. 위 결과는 `b53a69b`에서 본 것만 적었고, 다른 커밋의 결과를 합쳐 전체 성공으로 표시하지 않습니다.
 
 ## 5. 데이터 보존 계획
 
